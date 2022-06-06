@@ -49,10 +49,57 @@ class ParsingController extends Controller
             $seller['name'] = $page->filter('div.single-more-wrap')->children()->eq(1)->text();
             $seller['website'] = $page->filter('div.single-more-contact')->children()->eq(1)->text();
             $seller['address'] = $page->filter('div.single-more-contact')->children()->eq(0)->text();
+//            $phoneUrl = 'https://glotr.uz' . $page->filter('div.single-more-contact-item')->children('div.proposal-hover')->children('div.proposal-show-number')->children()
+//                    ->attr('data-url');
+//            $http = new \GuzzleHttp\Client();
+//            //get phone
+//            if (time_nanosleep(3, 0)) {
+//                $phoneData = $http->get($phoneUrl);
+//                if ($phoneData && $phoneData->getStatusCode() === 200) {
+//                    $phoneData = json_decode($phoneData->getBody()->getContents(), true);
+//                    foreach ($phoneData as $key => $phone) {
+//                        if ($phone['type'] === '1') {
+//                            $phone = explode('>', $phone['value']);
+//                            $phones[$key] = rtrim($phone[1], ' </a>');
+//
+//                        } else
+//                            if ($phone['type'] === '2') {
+//                                $phone = explode('>', $phone['value']);
+//                                $seller['email'] = rtrim($phone[1], ' </a>');
+//
+//                            }
+//                    }
+//                }
+//            }
+//            $seller['phones'] = $phones;
+            $product['name'] = $name;
+            $product['url'] = $url;
+            $product['categories'] = $categories;
+            $existSeller = Seller::where('name', $seller['name'])->first();
+            if (!$existSeller) {
+                $existSeller = Seller::create($seller);
+            }
+            $product['seller_id'] = $existSeller->id;
+                Product::create($product);
+
+        }
+    }
+
+
+    public function updateSaller()
+    {
+        foreach (ProductUrl::all() as $url) {
+            ini_set('memory_limit', -1);
+            ini_set('max_execution_time', 0);
+            $client = new \Goutte\Client();
+            $url = $url->url;
+            $page = $client->request('GET', $url);
+
+            //get categories
             $phoneUrl = 'https://glotr.uz' . $page->filter('div.single-more-contact-item')->children('div.proposal-hover')->children('div.proposal-show-number')->children()
                     ->attr('data-url');
             $http = new \GuzzleHttp\Client();
-            //get phone
+//            //get phone
             if (time_nanosleep(3, 0)) {
                 $phoneData = $http->get($phoneUrl);
                 if ($phoneData && $phoneData->getStatusCode() === 200) {
@@ -72,16 +119,13 @@ class ParsingController extends Controller
                 }
             }
             $seller['phones'] = $phones;
-            $product['name'] = $name;
-            $product['url'] = $url;
-            $product['categories'] = $categories;
-            $existSeller = Seller::where('name', $seller['name'])->orWhere('email', $seller['email'])->first();
+            $existSeller = Seller::where('name', $seller['name'])->first();
             if (!$existSeller) {
                 $existSeller = Seller::create($seller);
+            } else {
+                $existSeller->update($seller);
             }
-            $product['seller_id'] = $existSeller->id;
-            Product::create($product);
-            
+
         }
     }
 }
