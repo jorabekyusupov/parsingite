@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductUrl;
 use App\Models\Seller;
+use App\Models\Selller;
 use http\Client;
 
 class ParsingController extends Controller
@@ -30,6 +31,7 @@ class ParsingController extends Controller
 
     public function scrapping()
     {
+        $urls = Selller::with('product')->get()->pluck('product.url');;
         foreach (ProductUrl::all() as $url) {
             ini_set('memory_limit', -1);
             ini_set('max_execution_time', 0);
@@ -80,22 +82,26 @@ class ParsingController extends Controller
                 $existSeller = Seller::create($seller);
             }
             $product['seller_id'] = $existSeller->id;
-                Product::create($product);
+            Product::create($product);
 
         }
     }
 
 
-    public function updateSaller()
+    public function updateSeller()
     {
-        foreach (ProductUrl::all() as $url) {
+        $urls = Selller::with('product')->get()->pluck('product.url');;
+        foreach ($urls as $url) {
             ini_set('memory_limit', -1);
             ini_set('max_execution_time', 0);
             $client = new \Goutte\Client();
-            $url = $url->url;
+            $url = $url;
             $page = $client->request('GET', $url);
 
             //get categories
+            $seller['name'] = $page->filter('div.single-more-wrap')->children()->eq(1)->text();
+            $seller['website'] = $page->filter('div.single-more-contact')->children()->eq(1)->text();
+
             $phoneUrl = 'https://glotr.uz' . $page->filter('div.single-more-contact-item')->children('div.proposal-hover')->children('div.proposal-show-number')->children()
                     ->attr('data-url');
             $http = new \GuzzleHttp\Client();
@@ -119,13 +125,20 @@ class ParsingController extends Controller
                 }
             }
             $seller['phones'] = $phones;
-            $existSeller = Seller::where('name', $seller['name'])->first();
-            if (!$existSeller) {
-                $existSeller = Seller::create($seller);
-            } else {
+
+            $existSeller = Seller::where('website', $seller['website'])->first();
+            if ($existSeller) {
                 $existSeller->update($seller);
             }
-
+            $seller = [];
+            $phones = [];
         }
+
+    }
+
+    public function seller()
+    {
+       return  Selller::with('product')->get()->pluck('product.url');
+
     }
 }

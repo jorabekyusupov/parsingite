@@ -20,3 +20,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/xml', [\App\Http\Controllers\ParsingController::class, 'index']);
 Route::get('/parsing', [\App\Http\Controllers\ParsingController::class, 'scrapping']);
+Route::get('/update', [\App\Http\Controllers\ParsingController::class, 'updateSeller']);
+Route::get('/seller', [\App\Http\Controllers\ParsingController::class, 'seller']);
+
