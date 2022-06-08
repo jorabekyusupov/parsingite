@@ -138,7 +138,17 @@ class ParsingController extends Controller
 
     public function seller()
     {
-       return  Selller::with('product')->get()->pluck('product.url');
-
+        $seller_id = Seller::get()->pluck('id');
+        foreach ($seller_id as $id) {
+            $categories = Product::where('seller_id', $id)->get()->pluck('categories');
+            $categories = $categories->map(function ($item) {
+                  $items[] = $item[1];
+                  return $items;
+            });
+            $categories = $categories->flatten()->unique();
+            Seller::find($id)->update(['product_categories' => $categories]);
+//        $cat[]=$categories;
+        }
+        return response()->json('updated seller: '.count($seller_id),200);
     }
 }
